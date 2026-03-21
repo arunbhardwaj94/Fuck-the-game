@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!admin) { navigate('/admin'); return; }
+    if (!admin) { navigate('/bastar-admin'); return; }
     fetchData();
   }, [admin, navigate, fetchData]);
 
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => { logout(); navigate('/admin', { replace: true }); };
+  const handleLogout = () => { logout(); navigate('/bastar-admin', { replace: true }); };
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="admin-dashboard">

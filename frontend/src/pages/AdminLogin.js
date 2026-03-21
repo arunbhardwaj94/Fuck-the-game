@@ -14,7 +14,7 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   if (admin) {
-    navigate('/admin/dashboard');
+    navigate('/bastar-admin/dashboard');
     return null;
   }
 
@@ -24,7 +24,7 @@ export default function AdminLogin() {
     try {
       await login(email, password);
       toast.success('Login successful!');
-      navigate('/admin/dashboard');
+      navigate('/bastar-admin/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Invalid credentials');
     } finally {

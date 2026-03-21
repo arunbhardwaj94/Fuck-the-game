@@ -1,10 +1,37 @@
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Minus, Plus, Trash2, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { toast } from 'sonner';
+
+const WHATSAPP_NUMBER = '916264178646';
 
 export default function CartSheet() {
   const { cart, cartOpen, setCartOpen, updateCartItem, clearCart } = useCart();
+  const [address, setAddress] = useState('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
+
+  const sendToWhatsApp = () => {
+    if (!address.trim()) {
+      toast.error('Please enter your delivery address');
+      return;
+    }
+    let message = `*New Order - Bastar Mart*\n\n`;
+    message += `*Items:*\n`;
+    cart.items.forEach((item, i) => {
+      message += `${i + 1}. ${item.name} x${item.quantity} - Rs.${item.item_total}\n`;
+    });
+    message += `\n*Total: Rs.${cart.total}*\n`;
+    message += `\n*Delivery Address:*\n${address}\n`;
+    message += `\nThank you for ordering from Bastar Mart!`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+    toast.success('Redirecting to WhatsApp...');
+  };
 
   return (
     <Sheet open={cartOpen} onOpenChange={setCartOpen}>
@@ -78,19 +105,42 @@ export default function CartSheet() {
                 >
                   <Trash2 className="w-3 h-3" /> Clear Cart
                 </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
+                <div className="text-right">
                   <p className="text-xs text-gray-400 font-body">Total</p>
                   <p className="font-heading font-extrabold text-xl text-gray-900">&#8377;{cart.total}</p>
                 </div>
-                <Button
-                  data-testid="checkout-btn"
-                  className="bg-brand-green hover:bg-brand-green-dark text-white rounded-xl px-8 h-12 font-heading font-bold text-base active:scale-95 transition-transform duration-150"
-                >
-                  Checkout
-                </Button>
               </div>
+
+              {/* Address & WhatsApp Checkout */}
+              {!showAddressForm ? (
+                <Button
+                  data-testid="whatsapp-checkout-btn"
+                  onClick={() => setShowAddressForm(true)}
+                  className="w-full h-12 bg-[#25D366] hover:bg-[#1da851] text-white rounded-xl font-heading font-bold text-base active:scale-[0.98] transition-transform duration-150 gap-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Order via WhatsApp
+                </Button>
+              ) : (
+                <div className="space-y-2" data-testid="whatsapp-address-form">
+                  <Input
+                    data-testid="delivery-address-input"
+                    type="text"
+                    placeholder="Enter your delivery address..."
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="h-10 rounded-xl font-body text-sm"
+                  />
+                  <Button
+                    data-testid="send-whatsapp-btn"
+                    onClick={sendToWhatsApp}
+                    className="w-full h-12 bg-[#25D366] hover:bg-[#1da851] text-white rounded-xl font-heading font-bold text-base active:scale-[0.98] transition-transform duration-150 gap-2"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Send Order to WhatsApp
+                  </Button>
+                </div>
+              )}
             </div>
           </>
         )}

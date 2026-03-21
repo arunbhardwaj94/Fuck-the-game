@@ -37,8 +37,8 @@ function App() {
             <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
             <Route path="/category/:categoryId" element={<AppLayout><CategoryPage /></AppLayout>} />
             <Route path="/search" element={<AppLayout><SearchPage /></AppLayout>} />
-            <Route path="/admin" element={<AdminLayout><AdminLogin /></AdminLayout>} />
-            <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Route path="/bastar-admin" element={<AdminLayout><AdminLogin /></AdminLayout>} />
+            <Route path="/bastar-admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
           </Routes>
         </CartProvider>
       </AuthProvider>

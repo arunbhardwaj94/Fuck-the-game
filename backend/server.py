@@ -173,7 +173,10 @@ async def get_products(category_id: Optional[str] = None, search: Optional[str] 
     if category_id:
         query["category_id"] = category_id
     if search:
-        query["name"] = {"$regex": search, "$options": "i"}
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"description": {"$regex": search, "$options": "i"}}
+        ]
     products = await db.products.find(query, {"_id": 0}).to_list(limit)
     cat_cache = {}
     for p in products:

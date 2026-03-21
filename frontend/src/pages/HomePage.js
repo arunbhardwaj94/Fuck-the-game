@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Clock, Truck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/64a13bb5-87c1-4f94-afdc-a97288c0fbd7/images/5612fc865d65a91c4bfd6b2eab82d6bdc3fe008a6bee0f4de3f860e460a28608.png';
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
@@ -17,7 +17,7 @@ export default function HomePage() {
       try {
         const [catRes, prodRes] = await Promise.all([
           axios.get(`${API}/categories`),
-          axios.get(`${API}/products?limit=20`)
+          axios.get(`${API}/products?limit=30`)
         ]);
         setCategories(catRes.data);
         setProducts(prodRes.data);
@@ -62,8 +62,8 @@ export default function HomePage() {
                 Fresh Groceries,<br />
                 <span className="text-brand-green">Lightning Fast</span>
               </h2>
-              <p className="font-body text-base text-gray-700 max-w-md">
-                Get your daily essentials delivered to your doorstep in just 10 minutes. Fresh produce, dairy, snacks & more.
+              <p className="font-body text-sm md:text-base text-gray-700 max-w-md">
+                Bastar Mart: The Smart Way to Shop. Get your daily essentials delivered to your doorstep in just 10 minutes.
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
                 <div className="flex items-center gap-2 text-sm font-body text-gray-700">
@@ -74,9 +74,14 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="hidden md:block w-80 lg:w-96 shrink-0">
+            <div className="hidden md:flex flex-col items-center gap-3 w-80 lg:w-96 shrink-0">
               <img
-                src="https://images.unsplash.com/photo-1773048806365-4ef3a8be3fba?w=500&h=400&fit=crop"
+                src={LOGO_URL}
+                alt="Bastar Mart Logo"
+                className="w-32 h-32 object-contain"
+              />
+              <img
+                src="https://images.unsplash.com/photo-1773048806365-4ef3a8be3fba?w=500&h=300&fit=crop"
                 alt="Fast Delivery"
                 className="w-full h-auto rounded-2xl object-cover shadow-lg"
               />
@@ -85,21 +90,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Blinkit-style Circle Categories */}
       {categories.length > 0 && (
-        <section className="py-10 md:py-14" data-testid="categories-section">
+        <section className="py-8 md:py-12" data-testid="categories-section">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="font-heading font-extrabold text-xl md:text-2xl text-gray-900 mb-6">Shop by Category</h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide md:grid md:grid-cols-6 md:gap-6 md:overflow-visible md:pb-0">
               {categories.map((cat, i) => (
                 <Link
                   key={cat.id}
                   to={`/category/${cat.id}`}
-                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                  className="flex flex-col items-center gap-2.5 cursor-pointer group shrink-0"
                   data-testid={`category-card-${cat.id}`}
-                  style={{ animationDelay: `${i * 0.05}s` }}
                 >
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden bg-brand-green-light border-2 border-transparent group-hover:border-brand-green transition-all duration-200 group-hover:scale-105">
+                  <div className="w-[72px] h-[72px] md:w-24 md:h-24 rounded-full overflow-hidden bg-brand-green-light border-[3px] border-transparent group-hover:border-brand-green transition-all duration-200 group-hover:scale-110 shadow-sm group-hover:shadow-md">
                     <img
                       src={cat.image || 'https://via.placeholder.com/100?text=Category'}
                       alt={cat.name}
@@ -107,7 +111,7 @@ export default function HomePage() {
                       loading="lazy"
                     />
                   </div>
-                  <span className="text-xs md:text-sm font-heading font-bold text-gray-700 text-center leading-tight group-hover:text-brand-green transition-colors duration-200">
+                  <span className="text-[11px] md:text-xs font-heading font-bold text-gray-600 text-center leading-tight max-w-[80px] group-hover:text-brand-green transition-colors duration-200">
                     {cat.name}
                   </span>
                 </Link>
@@ -122,7 +126,7 @@ export default function HomePage() {
         const catProducts = products.filter(p => p.category_id === cat.id);
         if (catProducts.length === 0) return null;
         return (
-          <section key={cat.id} className="pb-10 md:pb-14" data-testid={`product-section-${cat.id}`}>
+          <section key={cat.id} className="pb-8 md:pb-12" data-testid={`product-section-${cat.id}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-heading font-extrabold text-lg md:text-xl text-gray-900">{cat.name}</h2>
