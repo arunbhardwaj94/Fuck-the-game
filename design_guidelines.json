@@ -1,0 +1,186 @@
+{
+  "project_name": "Bastar Mart",
+  "design_philosophy": {
+    "identity": "E1: The Anti-AI Designer",
+    "core_principles": [
+      "Speed is a Feature: UI must feel instant.",
+      "Organic Tech: Mix digital precision with organic 'freshness' (grain, rounded corners).",
+      "Density with Breath: High information density (like a supermarket shelf) but with 'aisles' of whitespace.",
+      "Mobile-First Obsession: Thumb-friendly zones are mandatory."
+    ],
+    "anti_patterns": [
+      "No generic 'Shopify' templates.",
+      "No 'Inter' font for headings.",
+      "No dark mode by default (Grocery = Light/Fresh). Dark mode is 'Night Market' style.",
+      "No slow animations. Everything is 0.2s or faster."
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Manrope, sans-serif",
+      "body": "DM Sans, sans-serif",
+      "accent": "Barlow Condensed, sans-serif"
+    },
+    "scale": {
+      "h1": "text-4xl md:text-6xl font-extrabold tracking-tight",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+      "h3": "text-xl md:text-2xl font-bold",
+      "body_lg": "text-lg font-medium leading-relaxed",
+      "body_base": "text-base font-normal leading-relaxed",
+      "caption": "text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=DM+Sans:wght@400;500;700&family=Barlow+Condensed:wght@700&display=swap');"
+    ]
+  },
+  "colors": {
+    "palette": {
+      "brand": {
+        "yellow": "#FFD600",
+        "green": "#0C831F",
+        "green_dark": "#054F10",
+        "green_light": "#E8F5E9"
+      },
+      "neutral": {
+        "white": "#FFFFFF",
+        "background": "#FAFAFA",
+        "surface": "#FFFFFF",
+        "border": "#E5E5E5",
+        "text_primary": "#0F172A",
+        "text_secondary": "#64748B"
+      },
+      "functional": {
+        "success": "#16A34A",
+        "error": "#DC2626",
+        "warning": "#F59E0B"
+      }
+    },
+    "tailwind_config_extension": {
+      "colors": {
+        "brand-yellow": "#FFD600",
+        "brand-green": "#0C831F",
+        "brand-green-dark": "#054F10",
+        "brand-green-light": "#E8F5E9"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "radius": "rounded-xl",
+    "shadows": {
+      "card": "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
+      "float": "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)",
+      "glow": "0 0 20px rgba(12, 131, 31, 0.3)"
+    },
+    "textures": {
+      "grain": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")"
+    }
+  },
+  "layout_strategy": {
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "grid_system": {
+      "product_grid": "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-6",
+      "category_bento": "grid grid-cols-3 md:grid-cols-6 gap-4"
+    },
+    "spacing": {
+      "section": "py-12 md:py-16",
+      "element": "mb-4"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-brand-green text-white hover:bg-brand-green-dark font-bold rounded-lg px-6 py-3 transition-all active:scale-95 shadow-md",
+      "secondary": "bg-brand-yellow text-black hover:bg-yellow-400 font-bold rounded-lg px-6 py-3 transition-all active:scale-95",
+      "outline": "border-2 border-brand-green text-brand-green hover:bg-brand-green-light font-bold rounded-lg px-6 py-3",
+      "add_to_cart": "bg-white border border-brand-green text-brand-green hover:bg-brand-green hover:text-white uppercase text-xs font-bold py-2 px-4 rounded-lg shadow-sm"
+    },
+    "cards": {
+      "product": "bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 group relative",
+      "category": "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105"
+    },
+    "navigation": {
+      "mobile_bottom": "fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-6 flex justify-between items-center z-50",
+      "header": "sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100"
+    }
+  },
+  "image_assets": {
+    "hero": {
+      "url": "https://images.unsplash.com/photo-1773048806365-4ef3a8be3fba?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTJ8MHwxfHNlYXJjaHwzfHxncm9jZXJ5JTIwZGVsaXZlcnklMjBzY29vdGVyJTIwZmFzdCUyMHJpZGVyfGVufDB8fHx8MTc3NDEwOTU4MHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Fast Delivery Green Scooter",
+      "category": "hero"
+    },
+    "categories": [
+      {
+        "name": "Vegetables",
+        "url": "https://images.pexels.com/photos/5425794/pexels-photo-5425794.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "category"
+      },
+      {
+        "name": "Dairy & Breakfast",
+        "url": "https://images.pexels.com/photos/3038/morning-breakfast-kitchen-cutting-board.jpg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "category"
+      },
+      {
+        "name": "Fruits",
+        "url": "https://images.pexels.com/photos/7333130/pexels-photo-7333130.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "category"
+      },
+      {
+        "name": "Munchies",
+        "url": "https://images.pexels.com/photos/36236282/pexels-photo-36236282.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "category"
+      }
+    ],
+    "products": [
+      {
+        "name": "Cold Drink",
+        "url": "https://images.unsplash.com/photo-1690988109092-6b29ef11107f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzJ8MHwxfHNlYXJjaHwzfHxjb2NhJTIwY29sYSUyMGNhbiUyMGNvbGQlMjBkcmlua3xlbnwwfHx8fDE3NzQxMDk1ODJ8MA&ixlib=rb-4.1.0&q=85",
+        "category": "product"
+      }
+    ]
+  },
+  "motion_guidelines": {
+    "library": "framer-motion",
+    "defaults": {
+      "duration": 0.2,
+      "ease": "easeOut"
+    },
+    "animations": {
+      "fade_in_up": {
+        "initial": { "opacity": 0, "y": 20 },
+        "animate": { "opacity": 1, "y": 0 },
+        "transition": { "duration": 0.4 }
+      },
+      "stagger_children": {
+        "animate": { "transition": { "staggerChildren": 0.05 } }
+      }
+    }
+  },
+  "accessibility_rules": {
+    "contrast": "Ensure text on yellow backgrounds is BLACK (#000000), not grey.",
+    "focus_states": "All interactive elements must have a visible ring-2 ring-brand-green focus state.",
+    "aria": "Use aria-label for all icon-only buttons (like Add to Cart +)."
+  },
+  "instructions_to_main_agent": [
+    "1. Setup Tailwind Colors: Update tailwind.config.js with the brand palette immediately.",
+    "2. Font Setup: Add the Google Fonts import to index.css.",
+    "3. Component Override: Heavily customize Shadcn components. Remove default sharp corners if they clash with the 'friendly' vibe (use rounded-lg or rounded-xl).",
+    "4. Mobile Nav: Implement a fixed bottom navigation bar for mobile views. Hide it on desktop.",
+    "5. Hero Section: Use the scooter image with a 'slide-in' animation from the left.",
+    "6. Product Cards: The 'Add' button is the most important element. Make it pop.",
+    "7. Admin Dashboard: Keep it clean, use 'Swiss' layout (high density data tables).",
+    "8. Authentication: Simple, fast forms. No multi-step wizards if possible.",
+    "9. NO Watermarks: Ensure no 'Made with Emergent' text appears anywhere.",
+    "10. Dark Mode: If implementing, use Slate-900 (not pure black) for background and keep the Green accents neon."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Do not use gradients for dark colors.",
+    "Don't make generic centered layouts.",
+    "Use glass-morphism effects with backdrop filters.",
+    "You MUST NOT apply universal transition (transition: all).",
+    "You MUST NOT center align the app container.",
+    "NEVER use AI assistant Emojis.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Use sonner for toasts."
+  ]
+}
