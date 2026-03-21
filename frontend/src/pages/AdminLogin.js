@@ -36,9 +36,7 @@ export default function AdminLogin() {
     <div className="min-h-[80vh] flex items-center justify-center px-4" data-testid="admin-login-page">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-brand-green rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-7 h-7 text-white" />
-          </div>
+          <img src="https://customer-assets.emergentagent.com/job_ecommerce-preview-9/artifacts/jueohop5_IMG_2943.png" alt="Bastar Mart" className="h-14 mx-auto mb-3 object-contain" />
           <h1 className="font-heading font-extrabold text-2xl text-gray-900">Admin Login</h1>
           <p className="text-sm text-gray-400 font-body mt-1">Sign in to manage Bastar Mart</p>
         </div>

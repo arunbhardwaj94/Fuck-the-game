@@ -5,7 +5,7 @@ import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/64a13bb5-87c1-4f94-afdc-a97288c0fbd7/images/5612fc865d65a91c4bfd6b2eab82d6bdc3fe008a6bee0f4de3f860e460a28608.png';
+const LOGO_URL = 'https://customer-assets.emergentagent.com/job_ecommerce-preview-9/artifacts/jueohop5_IMG_2943.png';
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);

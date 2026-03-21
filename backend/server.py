@@ -89,7 +89,43 @@ class AdminLogin(BaseModel):
     email: str
     password: str
 
-# ============ AUTH ============
+# User models
+class UserSignup(BaseModel):
+    name: str
+    email: str
+    password: str
+    phone: Optional[str] = ""
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+
+class AddressCreate(BaseModel):
+    label: Optional[str] = "Home"
+    full_address: str
+    city: Optional[str] = ""
+    pincode: Optional[str] = ""
+    phone: Optional[str] = ""
+
+class OrderCreate(BaseModel):
+    address_id: str
+    payment_method: Optional[str] = "cod"
+
+class PasswordReset(BaseModel):
+    email: str
+    new_password: str
+
+# ============ AUTH HELPERS ============
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 async def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
@@ -102,6 +138,19 @@ async def verify_admin(credentials: HTTPAuthorizationCredentials = Depends(secur
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def verify_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+        if payload.get("role") != "user":
+            raise HTTPException(status_code=403, detail="Not authorized")
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# ============ ADMIN AUTH ============
+
 @api_router.post("/admin/login")
 async def admin_login(data: AdminLogin):
     if data.email != ADMIN_EMAIL or data.password != ADMIN_PASSWORD:
@@ -113,8 +162,138 @@ async def admin_login(data: AdminLogin):
     return {"token": token, "email": data.email}
 
 @api_router.get("/admin/verify")
-async def verify_token(admin=Depends(verify_admin)):
+async def verify_admin_token(admin=Depends(verify_admin)):
     return {"valid": True, "email": admin.get("email")}
+
+# ============ USER AUTH ============
+
+@api_router.post("/user/signup")
+async def user_signup(data: UserSignup):
+    existing = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = {
+        "id": str(uuid.uuid4()),
+        "name": data.name,
+        "email": data.email.lower(),
+        "password": hash_password(data.password),
+        "phone": data.phone,
+        "addresses": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user)
+    token = jwt.encode(
+        {"user_id": user["id"], "email": user["email"], "role": "user", "exp": datetime.now(timezone.utc).timestamp() + 86400 * 7},
+        JWT_SECRET, algorithm="HS256"
+    )
+    return {"token": token, "user": {"id": user["id"], "name": user["name"], "email": user["email"], "phone": user["phone"]}}
+
+@api_router.post("/user/login")
+async def user_login(data: UserLogin):
+    user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if not user or not verify_password(data.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    token = jwt.encode(
+        {"user_id": user["id"], "email": user["email"], "role": "user", "exp": datetime.now(timezone.utc).timestamp() + 86400 * 7},
+        JWT_SECRET, algorithm="HS256"
+    )
+    return {"token": token, "user": {"id": user["id"], "name": user["name"], "email": user["email"], "phone": user.get("phone", "")}}
+
+@api_router.get("/user/verify")
+async def verify_user_token(user_data=Depends(verify_user)):
+    user = await db.users.find_one({"id": user_data["user_id"]}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"valid": True, "user": {"id": user["id"], "name": user["name"], "email": user["email"], "phone": user.get("phone", "")}}
+
+@api_router.put("/user/profile")
+async def update_user_profile(data: UserUpdate, user_data=Depends(verify_user)):
+    update = {}
+    if data.name is not None:
+        update["name"] = data.name
+    if data.phone is not None:
+        update["phone"] = data.phone
+    if update:
+        await db.users.update_one({"id": user_data["user_id"]}, {"$set": update})
+    user = await db.users.find_one({"id": user_data["user_id"]}, {"_id": 0, "password": 0})
+    return {"user": {"id": user["id"], "name": user["name"], "email": user["email"], "phone": user.get("phone", "")}}
+
+@api_router.post("/user/reset-password")
+async def reset_password(data: PasswordReset):
+    user = await db.users.find_one({"email": data.email.lower()}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Email not found")
+    await db.users.update_one({"email": data.email.lower()}, {"$set": {"password": hash_password(data.new_password)}})
+    return {"message": "Password reset successful"}
+
+# ============ USER ADDRESSES ============
+
+@api_router.get("/user/addresses")
+async def get_addresses(user_data=Depends(verify_user)):
+    user = await db.users.find_one({"id": user_data["user_id"]}, {"_id": 0})
+    return {"addresses": user.get("addresses", [])}
+
+@api_router.post("/user/addresses")
+async def add_address(data: AddressCreate, user_data=Depends(verify_user)):
+    addr = data.model_dump()
+    addr["id"] = str(uuid.uuid4())
+    await db.users.update_one({"id": user_data["user_id"]}, {"$push": {"addresses": addr}})
+    user = await db.users.find_one({"id": user_data["user_id"]}, {"_id": 0})
+    return {"addresses": user.get("addresses", [])}
+
+@api_router.delete("/user/addresses/{address_id}")
+async def delete_address(address_id: str, user_data=Depends(verify_user)):
+    await db.users.update_one({"id": user_data["user_id"]}, {"$pull": {"addresses": {"id": address_id}}})
+    user = await db.users.find_one({"id": user_data["user_id"]}, {"_id": 0})
+    return {"addresses": user.get("addresses", [])}
+
+# ============ ORDERS ============
+
+@api_router.post("/orders")
+async def create_order(data: OrderCreate, user_data=Depends(verify_user)):
+    user = await db.users.find_one({"id": user_data["user_id"]}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    address = next((a for a in user.get("addresses", []) if a["id"] == data.address_id), None)
+    if not address:
+        raise HTTPException(status_code=400, detail="Address not found")
+    session_id = None
+    carts = await db.carts.find({}).to_list(100)
+    for c in carts:
+        if len(c.get("items", [])) > 0:
+            session_id = c.get("session_id")
+            break
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+    cart = await db.carts.find_one({"session_id": session_id}, {"_id": 0})
+    if not cart or not cart.get("items"):
+        raise HTTPException(status_code=400, detail="Cart is empty")
+    items_detail = []
+    total = 0
+    for item in cart["items"]:
+        product = await db.products.find_one({"id": item["product_id"]}, {"_id": 0})
+        if product:
+            item_total = product["price"] * item["quantity"]
+            total += item_total
+            items_detail.append({"product_id": item["product_id"], "name": product["name"], "price": product["price"], "quantity": item["quantity"], "image": product.get("image", ""), "unit": product.get("unit", ""), "item_total": item_total})
+    order = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_data["user_id"],
+        "items": items_detail,
+        "total": round(total, 2),
+        "address": address,
+        "payment_method": data.payment_method,
+        "status": "confirmed",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.orders.insert_one(order)
+    await db.carts.delete_one({"session_id": session_id})
+    return {"order": {k: v for k, v in order.items() if k != "_id"}}
+
+@api_router.get("/orders")
+async def get_orders(user_data=Depends(verify_user)):
+    orders = await db.orders.find({"user_id": user_data["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"orders": orders}
 
 # ============ CLOUDINARY ============
 

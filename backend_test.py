@@ -345,6 +345,223 @@ class BastarMartAPITester:
                     200
                 )
 
+    def test_user_authentication(self):
+        """Test user authentication endpoints"""
+        print("\n👤 Testing User Authentication...")
+        
+        # Test user signup
+        test_user_email = f"testuser_{datetime.now().strftime('%H%M%S')}@example.com"
+        signup_response = self.run_test(
+            "User signup",
+            "POST",
+            "user/signup",
+            200,
+            {
+                "name": "Test User",
+                "email": test_user_email,
+                "password": "testpass123",
+                "phone": "9876543210"
+            }
+        )
+        
+        user_token = None
+        if signup_response and 'token' in signup_response:
+            user_token = signup_response['token']
+            print(f"   User token obtained: {user_token[:20]}...")
+            
+            # Test duplicate signup
+            self.run_test(
+                "User signup with duplicate email",
+                "POST",
+                "user/signup",
+                400,
+                {
+                    "name": "Another User",
+                    "email": test_user_email,
+                    "password": "testpass123"
+                }
+            )
+            
+            # Test user token verification
+            old_token = self.token
+            self.token = user_token
+            verify_response = self.run_test(
+                "User token verification",
+                "GET",
+                "user/verify",
+                200
+            )
+            
+            if verify_response:
+                print(f"   Verified user: {verify_response.get('user', {}).get('name')}")
+            
+            # Test profile update
+            self.run_test(
+                "Update user profile",
+                "PUT",
+                "user/profile",
+                200,
+                {
+                    "name": "Updated Test User",
+                    "phone": "9876543211"
+                }
+            )
+            
+            # Test user addresses
+            address_response = self.run_test(
+                "Get user addresses (empty)",
+                "GET",
+                "user/addresses",
+                200
+            )
+            
+            # Add an address
+            add_address_response = self.run_test(
+                "Add user address",
+                "POST",
+                "user/addresses",
+                200,
+                {
+                    "label": "Home",
+                    "full_address": "123 Test Street, Test Area",
+                    "city": "Test City",
+                    "pincode": "123456",
+                    "phone": "9876543210"
+                }
+            )
+            
+            address_id = None
+            if add_address_response and 'addresses' in add_address_response:
+                addresses = add_address_response['addresses']
+                if addresses:
+                    address_id = addresses[0]['id']
+                    print(f"   Added address with ID: {address_id}")
+            
+            # Test orders (requires cart with items)
+            # First add items to cart
+            products = self.run_test(
+                "Get products for order testing",
+                "GET",
+                "products?limit=2",
+                200
+            )
+            
+            if products and len(products) > 0 and address_id:
+                product_id = products[0]['id']
+                
+                # Add item to cart
+                self.run_test(
+                    "Add item to cart for order",
+                    "POST",
+                    f"cart/{self.session_id}/add",
+                    200,
+                    {"product_id": product_id, "quantity": 1}
+                )
+                
+                # Create order
+                order_response = self.run_test(
+                    "Create user order",
+                    "POST",
+                    "orders",
+                    200,
+                    {
+                        "address_id": address_id,
+                        "payment_method": "cod"
+                    }
+                )
+                
+                if order_response:
+                    print(f"   Order created with total: ₹{order_response.get('order', {}).get('total', 0)}")
+                
+                # Get user orders
+                orders_response = self.run_test(
+                    "Get user orders",
+                    "GET",
+                    "orders",
+                    200
+                )
+                
+                if orders_response:
+                    orders = orders_response.get('orders', [])
+                    print(f"   User has {len(orders)} orders")
+            
+            # Test delete address
+            if address_id:
+                self.run_test(
+                    "Delete user address",
+                    "DELETE",
+                    f"user/addresses/{address_id}",
+                    200
+                )
+            
+            # Restore admin token
+            self.token = old_token
+        
+        # Test user login
+        if test_user_email:
+            login_response = self.run_test(
+                "User login",
+                "POST",
+                "user/login",
+                200,
+                {
+                    "email": test_user_email,
+                    "password": "testpass123"
+                }
+            )
+            
+            if login_response and 'token' in login_response:
+                print(f"   Login successful for: {login_response.get('user', {}).get('name')}")
+        
+        # Test invalid login
+        self.run_test(
+            "User login with invalid credentials",
+            "POST",
+            "user/login",
+            401,
+            {
+                "email": "nonexistent@example.com",
+                "password": "wrongpass"
+            }
+        )
+        
+        # Test password reset
+        if test_user_email:
+            self.run_test(
+                "Reset user password",
+                "POST",
+                "user/reset-password",
+                200,
+                {
+                    "email": test_user_email,
+                    "new_password": "newpass123"
+                }
+            )
+            
+            # Test login with new password
+            self.run_test(
+                "User login with new password",
+                "POST",
+                "user/login",
+                200,
+                {
+                    "email": test_user_email,
+                    "password": "newpass123"
+                }
+            )
+        
+        # Test password reset for non-existent user
+        self.run_test(
+            "Reset password for non-existent user",
+            "POST",
+            "user/reset-password",
+            404,
+            {
+                "email": "nonexistent@example.com",
+                "new_password": "newpass123"
+            }
+        )
+
     def test_cloudinary_integration(self):
         """Test Cloudinary signature generation"""
         print("\n☁️ Testing Cloudinary Integration...")
@@ -404,6 +621,7 @@ class BastarMartAPITester:
         # Run test suites
         self.test_data_seeding()
         self.test_admin_auth()
+        self.test_user_authentication()
         self.test_categories()
         self.test_products()
         self.test_cart_operations()
