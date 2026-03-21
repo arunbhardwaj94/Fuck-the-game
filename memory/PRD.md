@@ -1,54 +1,62 @@
 # Bastar Mart - PRD
 
 ## Problem Statement
-Build a professional full-stack Quick-Commerce website called "Bastar Mart" with a Blinkit-inspired UI. Features include Admin Dashboard for CRUD on products/categories with Cloudinary image upload, user-facing homepage with categories, search, and quick add-to-cart system.
+Build a professional full-stack Quick-Commerce website called "Bastar Mart" with a Blinkit-inspired UI. Features include Admin Dashboard for CRUD on products/categories with Cloudinary image upload, user-facing homepage with categories, search, quick add-to-cart, user authentication, checkout flow, and WhatsApp ordering.
 
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn UI (port 3000)
 - **Backend**: FastAPI + Motor (async MongoDB) (port 8001, /api prefix)
-- **Database**: MongoDB (local)
+- **Database**: MongoDB (local) - Collections: users, products, categories, carts, orders
 - **Image Storage**: Cloudinary (signed uploads)
-- **Auth**: JWT-based admin authentication
+- **Auth**: JWT-based (Admin + User separate roles)
 
 ## User Personas
-1. **Shoppers**: Browse categories, search products, add to cart
-2. **Admin**: Login, manage products & categories, upload images
+1. **Shoppers**: Browse, search, cart, login/signup, checkout, order history, saved addresses
+2. **Admin**: Login at /bastar-admin, manage products & categories, upload images
 
 ## Core Requirements
-- Blinkit-style Yellow/Green theme
-- Mobile-first responsive design
-- Admin panel with CRUD + image upload
-- Category browsing & product search
-- Quick add-to-cart with quantity controls
-- Cart sidebar with totals
-- No "Made with Emergent" watermark
+- Custom Bastar Mart logo (teal green with speed arrow)
+- Blinkit-style Yellow/Green theme, mobile-first
+- User auth: Signup, Login, Forgot Password, Profile
+- Admin panel at secret route /bastar-admin
+- Cloudinary image upload in admin
+- Live search with debounce (name + description)
+- Circle categories like Blinkit
+- Cart with checkout flow (login required)
+- WhatsApp order to +916264178646
+- Saved addresses, Order history
 
-## What's Been Implemented (Jan 2026)
-- Full backend with 15+ API endpoints (auth, categories, products, cart, cloudinary, seed)
-- Homepage with hero, categories, product grids
-- Category page with filtered products
-- Search page with text search
-- Admin login with JWT auth
-- Admin dashboard with Products & Categories tabs (CRUD)
-- Cloudinary signed image upload in admin
-- Cart system with session-based persistence
-- 6 demo categories, 19 demo products seeded
-- Mobile bottom navigation
+## What's Been Implemented
+### Phase 1 (Jan 2026)
+- Full backend: 40+ API endpoints (admin auth, user auth, categories, products, cart, cloudinary, seed, addresses, orders)
+- Homepage: hero, circle categories, product grids, custom logo
+- Category page, Search page with live suggestions
+- Admin dashboard: Products & Categories CRUD with Cloudinary upload
+
+### Phase 2 (Jan 2026)
+- Live Search with debounce (searches name + description)
+- Admin moved to secret route /bastar-admin
+- Circle categories like Blinkit app
+- WhatsApp checkout integration
+- Custom user logo added everywhere
+
+### Phase 3 (Jan 2026)
+- User Authentication: Signup, Login, Forgot Password
+- User Profile: Edit name/phone, My Orders, Saved Addresses
+- Checkout flow: Login required, address selection, Place Order (COD)
+- WhatsApp + Place Order dual checkout
+- Header shows user name when logged in
+- Mobile nav with Account link
 
 ## Prioritized Backlog
-### P0 (Done)
-- Homepage, Categories, Products, Search, Cart, Admin CRUD, Image Upload
-
 ### P1 (Next)
-- Checkout flow with order placement
-- Order history for users
-- Product detail page
-- Admin bulk operations (import/export)
+- Product detail page with full description
+- Order status tracking (preparing, out for delivery, delivered)
+- Email notifications for order confirmation
 
 ### P2 (Future)
-- User registration & login
-- Address management
-- Payment integration (Razorpay/Stripe)
+- Payment integration (Razorpay/UPI)
 - Push notifications
 - Analytics dashboard for admin
 - Offers & coupons system
+- Delivery partner tracking

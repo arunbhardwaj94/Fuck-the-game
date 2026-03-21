@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, User, Phone, ArrowLeft, KeyRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,11 @@ export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
 
-  if (user) {
-    navigate(redirect, { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (user) navigate(redirect, { replace: true });
+  }, [user, navigate, redirect]);
+
+  if (user) return null;
 
   const handleLogin = async (e) => {
     e.preventDefault();
