@@ -167,7 +167,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => { logout(); navigate('/admin'); };
+  const handleLogout = () => { logout(); navigate('/admin', { replace: true }); };
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="admin-dashboard">
