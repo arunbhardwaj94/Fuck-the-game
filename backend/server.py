@@ -276,11 +276,14 @@ async def create_order(data: OrderCreate, user_data=Depends(verify_user)):
             item_total = product["price"] * item["quantity"]
             total += item_total
             items_detail.append({"product_id": item["product_id"], "name": product["name"], "price": product["price"], "quantity": item["quantity"], "image": product.get("image", ""), "unit": product.get("unit", ""), "item_total": item_total})
+    delivery_fee = 0 if total >= 499 else 25
     order = {
         "id": str(uuid.uuid4()),
         "user_id": user_data["user_id"],
         "items": items_detail,
         "total": round(total, 2),
+        "delivery_fee": delivery_fee,
+        "grand_total": round(total + delivery_fee, 2),
         "address": address,
         "payment_method": data.payment_method,
         "status": "confirmed",
@@ -352,10 +355,18 @@ async def get_products(category_id: Optional[str] = None, search: Optional[str] 
     if category_id:
         query["category_id"] = category_id
     if search:
-        query["$or"] = [
+        # Also search by category name
+        matching_cats = await db.categories.find(
+            {"name": {"$regex": search, "$options": "i"}}, {"_id": 0, "id": 1}
+        ).to_list(20)
+        cat_ids = [c["id"] for c in matching_cats]
+        or_conditions = [
             {"name": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}}
         ]
+        if cat_ids:
+            or_conditions.append({"category_id": {"$in": cat_ids}})
+        query["$or"] = or_conditions
     products = await db.products.find(query, {"_id": 0}).to_list(limit)
     cat_cache = {}
     for p in products:
@@ -412,7 +423,7 @@ async def delete_product(product_id: str, admin=Depends(verify_admin)):
 async def get_cart(session_id: str):
     cart = await db.carts.find_one({"session_id": session_id}, {"_id": 0})
     if not cart:
-        return {"session_id": session_id, "items": [], "total": 0}
+        return {"session_id": session_id, "items": [], "total": 0, "delivery_fee": 25, "grand_total": 25}
     items_with_details = []
     total = 0
     for item in cart.get("items", []):
@@ -430,7 +441,7 @@ async def get_cart(session_id: str):
                 "unit": product.get("unit", "1 pc"),
                 "item_total": item_total
             })
-    return {"session_id": session_id, "items": items_with_details, "total": round(total, 2)}
+    return {"session_id": session_id, "items": items_with_details, "total": round(total, 2), "delivery_fee": 0 if total >= 499 else 25, "grand_total": round(total + (0 if total >= 499 else 25), 2)}
 
 @api_router.post("/cart/{session_id}/add")
 async def add_to_cart(session_id: str, item: CartItem):

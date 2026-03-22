@@ -15,6 +15,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const navigate = useNavigate();
   const { cartCount, setCartOpen, cart } = useCart();
   const { user } = useUser();
@@ -22,11 +23,13 @@ export default function Header() {
   const dropdownRef = useRef(null);
 
   const fetchSuggestions = useCallback(async (q) => {
-    if (!q.trim() || q.trim().length < 2) { setSuggestions([]); return; }
+    if (!q.trim() || q.trim().length < 2) { setSuggestions([]); setSearchLoading(false); return; }
+    setSearchLoading(true);
     try {
       const res = await axios.get(`${API}/products?search=${encodeURIComponent(q)}&limit=6`);
       setSuggestions(res.data);
     } catch (e) { console.error('Search failed', e); }
+    finally { setSearchLoading(false); }
   }, []);
 
   const handleInputChange = (e) => {
@@ -92,21 +95,30 @@ export default function Header() {
                 />
               </div>
             </form>
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && searchQuery.trim().length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-gray-100 shadow-lg overflow-hidden z-50" data-testid="search-suggestions">
-                {suggestions.map(product => (
-                  <button key={product.id} onClick={() => selectSuggestion(product)} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-brand-green-light transition-colors text-left" data-testid={`suggestion-${product.id}`}>
-                    <img src={product.image || 'https://via.placeholder.com/32'} alt="" className="w-8 h-8 rounded-lg object-cover bg-gray-50 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-heading font-bold text-sm text-gray-900 truncate">{product.name}</p>
-                      <p className="text-[11px] text-gray-400 font-body">{product.unit} &middot; {product.category_name}</p>
-                    </div>
-                    <span className="font-heading font-extrabold text-sm text-brand-green shrink-0">&#8377;{product.price}</span>
-                  </button>
-                ))}
-                <button onClick={handleSearch} className="w-full text-center py-2.5 text-sm font-heading font-bold text-brand-green hover:bg-brand-green-light transition-colors border-t border-gray-50" data-testid="search-see-all">
-                  See all results for "{searchQuery}"
-                </button>
+                {suggestions.length > 0 ? (
+                  <>
+                    {suggestions.map(product => (
+                      <button key={product.id} onClick={() => selectSuggestion(product)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-brand-green-light transition-colors text-left" data-testid={`suggestion-${product.id}`}>
+                        <img src={product.image || 'https://via.placeholder.com/32'} alt="" className="w-10 h-10 rounded-lg object-cover bg-gray-50 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-heading font-bold text-sm text-gray-900 truncate">{product.name}</p>
+                          <p className="text-[11px] text-gray-400 font-body">{product.unit} &middot; {product.category_name}</p>
+                        </div>
+                        <span className="font-heading font-extrabold text-sm text-brand-green shrink-0">&#8377;{product.price}</span>
+                      </button>
+                    ))}
+                    <button onClick={handleSearch} className="w-full text-center py-2.5 text-sm font-heading font-bold text-brand-green hover:bg-brand-green-light transition-colors border-t border-gray-50" data-testid="search-see-all">
+                      See all results for "{searchQuery}"
+                    </button>
+                  </>
+                ) : (
+                  <div className="px-4 py-6 text-center" data-testid="no-search-results">
+                    <Search className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400 font-body">No products found. Try searching something else!</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

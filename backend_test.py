@@ -171,7 +171,7 @@ class BastarMartAPITester:
                 print("   Skipping category CRUD tests (no admin token)")
 
     def test_products(self):
-        """Test product CRUD operations"""
+        """Test product CRUD operations and live search functionality"""
         print("\n📦 Testing Products...")
         
         # Get all products
@@ -185,16 +185,90 @@ class BastarMartAPITester:
         if products:
             print(f"   Found {len(products)} products")
             
-            # Test product search
-            search_results = self.run_test(
-                "Search products for 'milk'",
+            # Test live search functionality - specific test cases
+            print("\n🔍 Testing Live Search Features...")
+            
+            # Test search for 'dairy' - should return Dairy category products
+            dairy_results = self.run_test(
+                "Search for 'dairy' (category search)",
+                "GET",
+                "products?search=dairy",
+                200
+            )
+            
+            if dairy_results:
+                print(f"   'dairy' search returned {len(dairy_results)} results")
+                dairy_products = [p for p in dairy_results if 'dairy' in p.get('category_name', '').lower()]
+                if dairy_products:
+                    self.log_test("Search 'dairy' returns Dairy category products", True)
+                    print(f"   Found dairy products: {[p['name'] for p in dairy_products[:3]]}")
+                else:
+                    self.log_test("Search 'dairy' should return Dairy category products", False, "No dairy category products found")
+            
+            # Test search for 'milk' - should return Amul Toned Milk
+            milk_results = self.run_test(
+                "Search for 'milk' (product name search)",
                 "GET",
                 "products?search=milk",
                 200
             )
             
-            if search_results:
-                print(f"   Search returned {len(search_results)} results")
+            if milk_results:
+                print(f"   'milk' search returned {len(milk_results)} results")
+                milk_products = [p for p in milk_results if 'milk' in p.get('name', '').lower()]
+                if milk_products:
+                    self.log_test("Search 'milk' returns milk products", True)
+                    print(f"   Found milk products: {[p['name'] for p in milk_products[:3]]}")
+                else:
+                    self.log_test("Search 'milk' should return milk products", False, "No milk products found")
+            
+            # Test search for 'cottage' - should return Paneer (description search)
+            cottage_results = self.run_test(
+                "Search for 'cottage' (description search)",
+                "GET",
+                "products?search=cottage",
+                200
+            )
+            
+            if cottage_results:
+                print(f"   'cottage' search returned {len(cottage_results)} results")
+                cottage_products = [p for p in cottage_results if 'cottage' in p.get('description', '').lower()]
+                if cottage_products:
+                    self.log_test("Search 'cottage' returns products with cottage in description", True)
+                    print(f"   Found cottage products: {[p['name'] for p in cottage_products[:3]]}")
+                else:
+                    self.log_test("Search 'cottage' should return products with cottage in description", False, "No cottage products found")
+            
+            # Test search for 'frozen' - should return Instant & Frozen Food products
+            frozen_results = self.run_test(
+                "Search for 'frozen' (category search)",
+                "GET",
+                "products?search=frozen",
+                200
+            )
+            
+            if frozen_results:
+                print(f"   'frozen' search returned {len(frozen_results)} results")
+                frozen_products = [p for p in frozen_results if 'frozen' in p.get('category_name', '').lower()]
+                if frozen_products:
+                    self.log_test("Search 'frozen' returns Frozen category products", True)
+                    print(f"   Found frozen products: {[p['name'] for p in frozen_products[:3]]}")
+                else:
+                    self.log_test("Search 'frozen' should return Frozen category products", False, "No frozen category products found")
+            
+            # Test search for non-existent term
+            nonexistent_results = self.run_test(
+                "Search for 'xyz123' (non-existent)",
+                "GET",
+                "products?search=xyz123",
+                200
+            )
+            
+            if nonexistent_results is not None:
+                if len(nonexistent_results) == 0:
+                    self.log_test("Search for non-existent term returns empty results", True)
+                else:
+                    self.log_test("Search for non-existent term should return empty results", False, f"Found {len(nonexistent_results)} unexpected results")
             
             # Test category filtering
             if products and len(products) > 0:
@@ -283,16 +357,27 @@ class BastarMartAPITester:
                 print("   Skipping product CRUD tests (no admin token)")
 
     def test_cart_operations(self):
-        """Test cart functionality"""
+        """Test cart functionality including delivery charge logic"""
         print("\n🛒 Testing Cart Operations...")
         
         # Get empty cart
-        self.run_test(
+        empty_cart = self.run_test(
             "Get empty cart",
             "GET",
             f"cart/{self.session_id}",
             200
         )
+        
+        if empty_cart:
+            # Verify empty cart has correct delivery fee structure
+            expected_fields = ['session_id', 'items', 'total', 'delivery_fee', 'grand_total']
+            missing_fields = [field for field in expected_fields if field not in empty_cart]
+            if not missing_fields:
+                self.log_test("Empty cart has required delivery fields", True)
+                print(f"   Empty cart delivery_fee: ₹{empty_cart.get('delivery_fee', 0)}")
+                print(f"   Empty cart grand_total: ₹{empty_cart.get('grand_total', 0)}")
+            else:
+                self.log_test("Empty cart missing delivery fields", False, f"Missing: {missing_fields}")
         
         # Get products to add to cart
         products = self.run_test(
@@ -303,29 +388,101 @@ class BastarMartAPITester:
         )
         
         if products and len(products) > 0:
-            product_id = products[0]['id']
-            print(f"   Using product ID: {product_id}")
+            # Find a low-priced product for testing below ₹499
+            low_price_product = None
+            high_price_product = None
             
-            # Add item to cart
+            for product in products:
+                if product.get('price', 0) < 100:
+                    low_price_product = product
+                if product.get('price', 0) > 200:
+                    high_price_product = product
+                    
+            if not low_price_product:
+                low_price_product = products[0]
+            if not high_price_product:
+                high_price_product = products[-1] if len(products) > 1 else products[0]
+            
+            print(f"   Using low price product: {low_price_product['name']} (₹{low_price_product['price']})")
+            
+            # Test cart below ₹499 (should have ₹25 delivery fee)
             cart_response = self.run_test(
-                "Add item to cart",
+                "Add low-price item to cart",
                 "POST",
                 f"cart/{self.session_id}/add",
                 200,
-                {"product_id": product_id, "quantity": 2}
+                {"product_id": low_price_product['id'], "quantity": 1}
             )
             
             if cart_response:
-                print(f"   Cart total: ₹{cart_response.get('total', 0)}")
-                print(f"   Cart items: {len(cart_response.get('items', []))}")
+                subtotal = cart_response.get('total', 0)
+                delivery_fee = cart_response.get('delivery_fee', 0)
+                grand_total = cart_response.get('grand_total', 0)
                 
-                # Update cart item quantity
+                print(f"   Cart subtotal: ₹{subtotal}")
+                print(f"   Cart delivery_fee: ₹{delivery_fee}")
+                print(f"   Cart grand_total: ₹{grand_total}")
+                
+                # Verify delivery charge logic for orders below ₹499
+                if subtotal < 499:
+                    if delivery_fee == 25:
+                        self.log_test("Delivery fee ₹25 for orders below ₹499", True)
+                    else:
+                        self.log_test("Delivery fee incorrect for orders below ₹499", False, f"Expected ₹25, got ₹{delivery_fee}")
+                    
+                    if grand_total == subtotal + 25:
+                        self.log_test("Grand total calculation correct for orders below ₹499", True)
+                    else:
+                        self.log_test("Grand total calculation incorrect", False, f"Expected ₹{subtotal + 25}, got ₹{grand_total}")
+                
+                # Now test adding more items to reach ₹499+ (free delivery)
+                # Add multiple items or higher quantity to reach ₹499+
+                quantity_needed = max(1, int(500 / low_price_product['price']) + 1)
+                
+                self.run_test(
+                    "Update cart to reach ₹499+ for free delivery",
+                    "POST",
+                    f"cart/{self.session_id}/update",
+                    200,
+                    {"product_id": low_price_product['id'], "quantity": quantity_needed}
+                )
+                
+                # Get updated cart
+                updated_cart = self.run_test(
+                    "Get cart after reaching ₹499+",
+                    "GET",
+                    f"cart/{self.session_id}",
+                    200
+                )
+                
+                if updated_cart:
+                    new_subtotal = updated_cart.get('total', 0)
+                    new_delivery_fee = updated_cart.get('delivery_fee', 0)
+                    new_grand_total = updated_cart.get('grand_total', 0)
+                    
+                    print(f"   Updated cart subtotal: ₹{new_subtotal}")
+                    print(f"   Updated cart delivery_fee: ₹{new_delivery_fee}")
+                    print(f"   Updated cart grand_total: ₹{new_grand_total}")
+                    
+                    # Verify free delivery for orders ₹499+
+                    if new_subtotal >= 499:
+                        if new_delivery_fee == 0:
+                            self.log_test("Free delivery for orders ₹499+", True)
+                        else:
+                            self.log_test("Free delivery not applied for orders ₹499+", False, f"Expected ₹0, got ₹{new_delivery_fee}")
+                        
+                        if new_grand_total == new_subtotal:
+                            self.log_test("Grand total calculation correct for free delivery", True)
+                        else:
+                            self.log_test("Grand total calculation incorrect for free delivery", False, f"Expected ₹{new_subtotal}, got ₹{new_grand_total}")
+                
+                # Test cart item operations
                 self.run_test(
                     "Update cart item quantity",
                     "POST",
                     f"cart/{self.session_id}/update",
                     200,
-                    {"product_id": product_id, "quantity": 3}
+                    {"product_id": low_price_product['id'], "quantity": 3}
                 )
                 
                 # Remove item from cart (set quantity to 0)
@@ -334,7 +491,7 @@ class BastarMartAPITester:
                     "POST",
                     f"cart/{self.session_id}/update",
                     200,
-                    {"product_id": product_id, "quantity": 0}
+                    {"product_id": low_price_product['id'], "quantity": 0}
                 )
                 
                 # Clear entire cart

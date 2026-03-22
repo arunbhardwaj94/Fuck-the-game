@@ -70,7 +70,7 @@ export default function HomePage() {
                   <Clock className="w-4 h-4 text-brand-green" /> 10 min delivery
                 </div>
                 <div className="flex items-center gap-2 text-sm font-body text-gray-700">
-                  <Truck className="w-4 h-4 text-brand-green" /> Free delivery above &#8377;199
+                  <Truck className="w-4 h-4 text-brand-green" /> Free delivery above &#8377;499
                 </div>
               </div>
             </div>
