@@ -48,6 +48,15 @@ Build a professional full-stack Quick-Commerce website called "Bastar Mart" with
 - Header shows user name when logged in
 - Mobile nav with Account link
 
+### Phase 4 (Jan 2026)
+- Delivery charge logic: ₹25 flat fee below ₹499, FREE above ₹499
+- Upsell message in cart: "Add ₹X more for FREE delivery!"
+- Price breakdown in cart: Subtotal + Delivery Fee + Total
+- Live search improved: 300ms debounce, searches name + description + category name
+- Empty search state: "No products found. Try searching something else!"
+- Search dropdown: image, name, unit, category, price
+- Hero updated to show "Free delivery above ₹499"
+
 ## Prioritized Backlog
 ### P1 (Next)
 - Product detail page with full description

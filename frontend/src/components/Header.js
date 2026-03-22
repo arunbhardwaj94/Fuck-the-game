@@ -51,7 +51,8 @@ export default function Header() {
   const selectSuggestion = (product) => {
     setSearchQuery(product.name);
     setShowSuggestions(false);
-    navigate(`/search?q=${encodeURIComponent(product.name)}`);
+    setSuggestions([]);
+    setTimeout(() => navigate(`/search?q=${encodeURIComponent(product.name)}`), 50);
   };
 
   useEffect(() => {
