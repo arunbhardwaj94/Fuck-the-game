@@ -8,7 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { useUser } from '@/context/UserContext';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from '@/lib/api';
 const LOGO_URL = 'https://customer-assets.emergentagent.com/job_ecommerce-preview-9/artifacts/jueohop5_IMG_2943.png';
 
 export default function Header() {

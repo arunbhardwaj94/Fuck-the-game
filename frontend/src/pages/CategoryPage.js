@@ -4,17 +4,19 @@ import { ChevronLeft } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from '@/lib/api';
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError('');
         const [catRes, prodRes] = await Promise.all([
           axios.get(`${API}/categories`),
           axios.get(`${API}/products?category_id=${categoryId}`)
@@ -23,6 +25,7 @@ export default function CategoryPage() {
         setCategory(cat);
         setProducts(prodRes.data);
       } catch (e) {
+        setError('Unable to load this category right now.');
         console.error('Failed to load data', e);
       } finally {
         setLoading(false);
@@ -54,7 +57,7 @@ export default function CategoryPage() {
 
         {products.length === 0 ? (
           <div className="text-center py-20">
-            <p className="font-heading font-bold text-gray-400">No products found in this category</p>
+            <p className="font-heading font-bold text-gray-400">{error || 'No products found in this category'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
