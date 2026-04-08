@@ -4,25 +4,28 @@ import { ArrowRight, Zap, Clock, Truck } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 const LOGO_URL = 'https://customer-assets.emergentagent.com/job_ecommerce-preview-9/artifacts/jueohop5_IMG_2943.png';
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError('');
         const [catRes, prodRes] = await Promise.all([
-          axios.get(`${API}/categories`),
-          axios.get(`${API}/products?limit=30`)
+          axios.get(`${API_BASE_URL}/categories`),
+          axios.get(`${API_BASE_URL}/products?limit=30`)
         ]);
         setCategories(catRes.data);
         setProducts(prodRes.data);
       } catch (e) {
         console.error('Failed to load data', e);
+        setError('Unable to load products right now. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -33,7 +36,7 @@ export default function HomePage() {
   // Seed data if empty
   useEffect(() => {
     if (!loading && categories.length === 0) {
-      axios.post(`${API}/seed`).then(() => {
+      axios.post(`${API_BASE_URL}/seed`).then(() => {
         window.location.reload();
       }).catch(console.error);
     }
@@ -43,6 +46,14 @@ export default function HomePage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]" data-testid="loading-spinner">
         <div className="w-8 h-8 border-3 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-10 text-center text-red-600 font-body">
+        {error}
       </div>
     );
   }

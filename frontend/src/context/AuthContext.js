@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export function AuthProvider({ children }) {
   const [admin, setAdmin] = useState(null);
@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('bastarmart_token');
     if (token) {
-      axios.get(`${API}/admin/verify`, { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(`${API_BASE_URL}/admin/verify`, { headers: { Authorization: `Bearer ${token}` } })
         .then(res => { setAdmin({ token, email: res.data.email }); })
         .catch(() => { localStorage.removeItem('bastarmart_token'); })
         .finally(() => setLoading(false));
@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const res = await axios.post(`${API}/admin/login`, { email, password });
+    const res = await axios.post(`${API_BASE_URL}/admin/login`, { email, password });
     localStorage.setItem('bastarmart_token', res.data.token);
     setAdmin({ token: res.data.token, email: res.data.email });
     return res.data;

@@ -4,26 +4,29 @@ import { ChevronLeft } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError('');
         const [catRes, prodRes] = await Promise.all([
-          axios.get(`${API}/categories`),
-          axios.get(`${API}/products?category_id=${categoryId}`)
+          axios.get(`${API_BASE_URL}/categories`),
+          axios.get(`${API_BASE_URL}/products?category_id=${categoryId}`)
         ]);
         const cat = catRes.data.find(c => c.id === categoryId);
         setCategory(cat);
         setProducts(prodRes.data);
       } catch (e) {
         console.error('Failed to load data', e);
+        setError('Failed to load this category.');
       } finally {
         setLoading(false);
       }
@@ -37,6 +40,10 @@ export default function CategoryPage() {
         <div className="w-8 h-8 border-3 border-brand-green border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (error) {
+    return <div className="max-w-7xl mx-auto px-4 py-10 text-center text-red-600 font-body">{error}</div>;
   }
 
   return (

@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/input';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -24,11 +25,13 @@ export default function SearchPage() {
   const searchProducts = async (q) => {
     if (!q.trim()) return;
     setLoading(true);
+    setError('');
     try {
-      const res = await axios.get(`${API}/products?search=${encodeURIComponent(q)}`);
+      const res = await axios.get(`${API_BASE_URL}/products?search=${encodeURIComponent(q)}`);
       setProducts(res.data);
     } catch (e) {
       console.error('Search failed', e);
+      setError('Search is temporarily unavailable. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -63,6 +66,8 @@ export default function SearchPage() {
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-3 border-brand-green border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-600 font-body">{error}</div>
         ) : products.length > 0 ? (
           <>
             <p className="text-sm text-gray-400 font-body mb-4">{products.length} results for "{searchParams.get('q')}"</p>
