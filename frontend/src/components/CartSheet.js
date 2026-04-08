@@ -10,12 +10,12 @@ import { toast } from 'sonner';
 import axios from 'axios';
 
 const WHATSAPP_NUMBER = '916264178646';
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 const FREE_DELIVERY_THRESHOLD = 499;
 const DELIVERY_FEE = 25;
 
 export default function CartSheet() {
-  const { cart, cartOpen, setCartOpen, updateCartItem, clearCart, fetchCart } = useCart();
+  const { cart, cartOpen, setCartOpen, sessionId, updateCartItem, clearCart, fetchCart } = useCart();
   const { user, addresses, fetchAddresses, getUserHeaders } = useUser();
   const navigate = useNavigate();
   const [selectedAddressId, setSelectedAddressId] = useState('');
@@ -53,7 +53,7 @@ export default function CartSheet() {
     setPlacing(true);
     try {
       const headers = getUserHeaders();
-      await axios.post(`${API}/orders`, { address_id: selectedAddressId, payment_method: 'cod' }, { headers });
+      await axios.post(`${API_BASE_URL}/orders`, { address_id: selectedAddressId, payment_method: 'cod', session_id: sessionId }, { headers });
       toast.success('Order placed successfully!');
       setCheckoutMode(false);
       setCartOpen(false);

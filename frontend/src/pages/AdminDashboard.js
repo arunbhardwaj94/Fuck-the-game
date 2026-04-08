@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export default function AdminDashboard() {
   const { admin, logout, getAuthHeaders } = useAuth();
@@ -35,8 +35,8 @@ export default function AdminDashboard() {
   const fetchData = useCallback(async () => {
     try {
       const [catRes, prodRes] = await Promise.all([
-        axios.get(`${API}/categories`),
-        axios.get(`${API}/products?limit=100`)
+        axios.get(`${API_BASE_URL}/categories`),
+        axios.get(`${API_BASE_URL}/products?limit=100`)
       ]);
       setCategories(catRes.data);
       setProducts(prodRes.data);
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
   const handleImageUpload = async (file) => {
     setUploading(true);
     try {
-      const sigRes = await axios.get(`${API}/cloudinary/signature?folder=bastarmart`, { headers });
+      const sigRes = await axios.get(`${API_BASE_URL}/cloudinary/signature?folder=bastarmart`, { headers });
       const sig = sigRes.data;
       const form = new FormData();
       form.append('file', file);
@@ -100,10 +100,10 @@ export default function AdminDashboard() {
     const payload = { ...pForm, price: parseFloat(pForm.price), mrp: parseFloat(pForm.mrp) || parseFloat(pForm.price), image: imagePreview || pForm.image };
     try {
       if (editingProduct) {
-        await axios.put(`${API}/products/${editingProduct.id}`, payload, { headers });
+        await axios.put(`${API_BASE_URL}/products/${editingProduct.id}`, payload, { headers });
         toast.success('Product updated!');
       } else {
-        await axios.post(`${API}/products`, payload, { headers });
+        await axios.post(`${API_BASE_URL}/products`, payload, { headers });
         toast.success('Product created!');
       }
       setProductDialog(false);
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
   const deleteProduct = async (id) => {
     if (!window.confirm('Delete this product?')) return;
     try {
-      await axios.delete(`${API}/products/${id}`, { headers });
+      await axios.delete(`${API_BASE_URL}/products/${id}`, { headers });
       toast.success('Product deleted');
       fetchData();
     } catch (e) {
@@ -143,10 +143,10 @@ export default function AdminDashboard() {
     const payload = { ...cForm, image: imagePreview || cForm.image };
     try {
       if (editingCategory) {
-        await axios.put(`${API}/categories/${editingCategory.id}`, payload, { headers });
+        await axios.put(`${API_BASE_URL}/categories/${editingCategory.id}`, payload, { headers });
         toast.success('Category updated!');
       } else {
-        await axios.post(`${API}/categories`, payload, { headers });
+        await axios.post(`${API_BASE_URL}/categories`, payload, { headers });
         toast.success('Category created!');
       }
       setCategoryDialog(false);
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
   const deleteCategory = async (id) => {
     if (!window.confirm('Delete this category and all its products?')) return;
     try {
-      await axios.delete(`${API}/categories/${id}`, { headers });
+      await axios.delete(`${API_BASE_URL}/categories/${id}`, { headers });
       toast.success('Category deleted');
       fetchData();
     } catch (e) {

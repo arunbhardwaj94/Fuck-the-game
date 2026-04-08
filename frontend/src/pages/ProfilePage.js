@@ -10,7 +10,7 @@ import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 export default function ProfilePage() {
   const { user, logout, updateProfile, addresses, fetchAddresses, addAddress, deleteAddress, getUserHeaders } = useUser();
@@ -34,7 +34,7 @@ export default function ProfilePage() {
   const fetchOrders = async () => {
     try {
       const headers = getUserHeaders();
-      const res = await axios.get(`${API}/orders`, { headers });
+      const res = await axios.get(`${API_BASE_URL}/orders`, { headers });
       setOrders(res.data.orders || []);
     } catch (e) { console.error('Failed to fetch orders'); }
   };

@@ -8,7 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { useUser } from '@/context/UserContext';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 const LOGO_URL = 'https://customer-assets.emergentagent.com/job_ecommerce-preview-9/artifacts/jueohop5_IMG_2943.png';
 
 export default function Header() {
@@ -26,7 +26,7 @@ export default function Header() {
     if (!q.trim() || q.trim().length < 2) { setSuggestions([]); setSearchLoading(false); return; }
     setSearchLoading(true);
     try {
-      const res = await axios.get(`${API}/products?search=${encodeURIComponent(q)}&limit=6`);
+      const res = await axios.get(`${API_BASE_URL}/products?search=${encodeURIComponent(q)}&limit=6`);
       setSuggestions(res.data);
     } catch (e) { console.error('Search failed', e); }
     finally { setSearchLoading(false); }

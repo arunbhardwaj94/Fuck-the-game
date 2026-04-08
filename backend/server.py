@@ -21,9 +21,10 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+db_name = os.environ.get("DB_NAME", "bastarmart")
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[db_name]
 
 # Cloudinary config
 cloudinary.config(
@@ -113,6 +114,7 @@ class AddressCreate(BaseModel):
 
 class OrderCreate(BaseModel):
     address_id: str
+    session_id: str
     payment_method: Optional[str] = "cod"
 
 class PasswordReset(BaseModel):
@@ -257,15 +259,7 @@ async def create_order(data: OrderCreate, user_data=Depends(verify_user)):
     address = next((a for a in user.get("addresses", []) if a["id"] == data.address_id), None)
     if not address:
         raise HTTPException(status_code=400, detail="Address not found")
-    session_id = None
-    carts = await db.carts.find({}).to_list(100)
-    for c in carts:
-        if len(c.get("items", [])) > 0:
-            session_id = c.get("session_id")
-            break
-    if not session_id:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-    cart = await db.carts.find_one({"session_id": session_id}, {"_id": 0})
+    cart = await db.carts.find_one({"session_id": data.session_id}, {"_id": 0})
     if not cart or not cart.get("items"):
         raise HTTPException(status_code=400, detail="Cart is empty")
     items_detail = []
@@ -290,7 +284,7 @@ async def create_order(data: OrderCreate, user_data=Depends(verify_user)):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.orders.insert_one(order)
-    await db.carts.delete_one({"session_id": session_id})
+    await db.carts.delete_one({"session_id": data.session_id})
     return {"order": {k: v for k, v in order.items() if k != "_id"}}
 
 @api_router.get("/orders")
@@ -534,10 +528,11 @@ async def seed_data():
 
 app.include_router(api_router)
 
+cors_origins = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -545,3 +540,9 @@ app.add_middleware(
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("server:app", host="0.0.0.0", port=int(os.environ.get("PORT", "8000")), reload=False)
