@@ -4,17 +4,19 @@ import { ArrowRight, Zap, Clock, Truck } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from '@/lib/api';
 const LOGO_URL = 'https://customer-assets.emergentagent.com/job_ecommerce-preview-9/artifacts/jueohop5_IMG_2943.png';
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError('');
         const [catRes, prodRes] = await Promise.all([
           axios.get(`${API}/categories`),
           axios.get(`${API}/products?limit=30`)
@@ -22,6 +24,7 @@ export default function HomePage() {
         setCategories(catRes.data);
         setProducts(prodRes.data);
       } catch (e) {
+        setError('Unable to load products right now. Please try again.');
         console.error('Failed to load data', e);
       } finally {
         setLoading(false);
@@ -119,6 +122,12 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+      )}
+
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+          <div className="rounded-xl bg-red-50 text-red-700 px-4 py-3 text-sm font-body">{error}</div>
+        </div>
       )}
 
       {/* Products by Category */}

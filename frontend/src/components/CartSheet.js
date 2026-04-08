@@ -8,14 +8,14 @@ import { useCart } from '@/context/CartContext';
 import { useUser } from '@/context/UserContext';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { API } from '@/lib/api';
 
 const WHATSAPP_NUMBER = '916264178646';
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const FREE_DELIVERY_THRESHOLD = 499;
 const DELIVERY_FEE = 25;
 
 export default function CartSheet() {
-  const { cart, cartOpen, setCartOpen, updateCartItem, clearCart, fetchCart } = useCart();
+  const { cart, cartOpen, setCartOpen, updateCartItem, clearCart, fetchCart, sessionId, loading, error } = useCart();
   const { user, addresses, fetchAddresses, getUserHeaders } = useUser();
   const navigate = useNavigate();
   const [selectedAddressId, setSelectedAddressId] = useState('');
@@ -53,7 +53,7 @@ export default function CartSheet() {
     setPlacing(true);
     try {
       const headers = getUserHeaders();
-      await axios.post(`${API}/orders`, { address_id: selectedAddressId, payment_method: 'cod' }, { headers });
+      await axios.post(`${API}/orders`, { address_id: selectedAddressId, payment_method: 'cod', session_id: sessionId }, { headers });
       toast.success('Order placed successfully!');
       setCheckoutMode(false);
       setCartOpen(false);
@@ -113,6 +113,13 @@ export default function CartSheet() {
           </SheetDescription>
         </SheetHeader>
 
+
+        {error && (
+          <div className="mx-4 mt-3 rounded-lg bg-red-50 text-red-700 px-3 py-2 text-xs font-body">{error}</div>
+        )}
+        {loading && (
+          <div className="mx-4 mt-3 rounded-lg bg-gray-50 text-gray-500 px-3 py-2 text-xs font-body">Updating cart...</div>
+        )}
         {cart.items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
             <ShoppingBag className="w-16 h-16 text-gray-200" />

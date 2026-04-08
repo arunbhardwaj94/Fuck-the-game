@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/input';
 import ProductCard from '@/components/ProductCard';
 import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+import { API } from '@/lib/api';
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -24,10 +25,12 @@ export default function SearchPage() {
   const searchProducts = async (q) => {
     if (!q.trim()) return;
     setLoading(true);
+    setError('');
     try {
       const res = await axios.get(`${API}/products?search=${encodeURIComponent(q)}`);
       setProducts(res.data);
     } catch (e) {
+      setError('Search is currently unavailable. Please retry.');
       console.error('Search failed', e);
     } finally {
       setLoading(false);
@@ -75,7 +78,7 @@ export default function SearchPage() {
         ) : searchParams.get('q') ? (
           <div className="text-center py-20">
             <Search className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-            <p className="font-heading font-bold text-gray-400">No products found for "{searchParams.get('q')}"</p>
+            <p className="font-heading font-bold text-gray-400">{error || `No products found for "${searchParams.get('q')}"`}</p>
             <p className="text-sm text-gray-400 font-body mt-1">Try different keywords</p>
           </div>
         ) : (
